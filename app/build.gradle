@@ -13,16 +13,43 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
+    signingConfigs {
+//        debug {
+//            storePassword '1234qwer'
+//            keyAlias 'alias'
+//            keyPassword 'rewq4321'
+//
+//        }
         release {
-            minifyEnabled false
+            storePassword '1234qwer'
+            keyAlias 'alias'
+            keyPassword 'rewq4321'
+            storeFile file('keyfile.jks')
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            versionNameSuffix "-DEBUG"
+            applicationIdSuffix ".debug"
+            resValue "string", "app_name_build", "[Debug] BarScannerDemo"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+        }
+        release {
+            applicationIdSuffix ""
+            signingConfig signingConfigs.release
+            debuggable false
+            minifyEnabled true
+            resValue "string", "app_name_build", "BarScannerDemo"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

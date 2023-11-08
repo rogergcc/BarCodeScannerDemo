@@ -108,7 +108,7 @@ class CameraActivity : AppCompatActivity() {
         }
 
         analysisUseCase = ImageAnalysis.Builder()
-            .setTargetRotation(previewView!!.display.rotation)
+            .setTargetRotation(previewView?.display?.rotation?:0)
             .build()
 
         // Initialize our background executor
@@ -131,6 +131,8 @@ class CameraActivity : AppCompatActivity() {
             Log.e(TAG, illegalStateException.message ?: "IllegalStateException")
         } catch (illegalArgumentException: IllegalArgumentException) {
             Log.e(TAG, illegalArgumentException.message ?: "IllegalArgumentException")
+        } catch (nullPointerException: NullPointerException) {
+            Log.e(TAG, nullPointerException.message ?: "Exception")
         }
     }
 
@@ -165,8 +167,7 @@ class CameraActivity : AppCompatActivity() {
                             val ssid = barcode.wifi!!.ssid
                             val password = barcode.wifi!!.password
                             val type = barcode.wifi!!.encryptionType
-                            binding.tvScannedData.text =
-                                "ssid: " + ssid + "\npassword: " + password + "\ntype: " + type
+                            binding.tvScannedData.text = "ssid: " + ssid + "\npassword: " + password + "\ntype: " + type
                         }
                         Barcode.TYPE_URL -> {
                             val title = barcode.url!!.title

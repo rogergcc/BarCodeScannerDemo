@@ -30,9 +30,9 @@ class FirstFragment : Fragment() {
 
         _binding = FragmentFirstBinding.inflate(inflater, container, false)
 
-        runWithPermissions(Permission.CAMERA) {
-            resultLauncher.launch(Intent(requireContext(), CameraActivity::class.java))
-        }
+//        runWithPermissions(Permission.CAMERA) {
+//            resultLauncher.launch(Intent(requireContext(), CameraActivity::class.java))
+//        }
 
 
         return binding.root
@@ -54,7 +54,11 @@ class FirstFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.buttonFirst.setOnClickListener {
-            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+
+            runWithPermissions(Permission.CAMERA) {
+                resultLauncher.launch(Intent(requireContext(), CameraActivity::class.java))
+            }
         }
     }
 

@@ -8,6 +8,11 @@ import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
 import com.rogergcc.barcodescannerdemo.MainActivity
 import com.rogergcc.barcodescannerdemo.databinding.ActivitySplashBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 class SplashActivity : AppCompatActivity() {
 
@@ -23,22 +28,33 @@ class SplashActivity : AppCompatActivity() {
 
         val view: View = binding.root
         setContentView(view)
-        topAnimation =
-            AnimationUtils.loadAnimation(this, androidx.appcompat.R.anim.abc_slide_in_bottom);
-        bottomAnimation =
-            AnimationUtils.loadAnimation(this, androidx.appcompat.R.anim.abc_slide_in_top);
-
-        binding.imgLogo.animation = topAnimation;
+//        topAnimation =
+//            AnimationUtils.loadAnimation(this, androidx.appcompat.R.anim.abc_slide_in_bottom);
+//        bottomAnimation =
+//            AnimationUtils.loadAnimation(this, androidx.appcompat.R.anim.abc_slide_in_top);
 //
-        val intentGetStarted = Intent(this@SplashActivity, MainActivity::class.java).apply {
-            startActivity(this)
+//        binding.imgLogo.animation = topAnimation;
+//
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(SPLASH_TIME_OUT.toLong())
+
+            Intent(this@SplashActivity, MainActivity::class.java).apply {
+                startActivity(this)
+//                overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+            }
+            finish()
+
         }
-        finish()
+
     }
 
     private fun init() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    companion object {
+        private const val SPLASH_TIME_OUT = 3000
     }
 }
 

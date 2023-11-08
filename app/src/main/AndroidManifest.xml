@@ -9,7 +9,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/app_name_build"
         android:supportsRtl="true"
         android:theme="@style/Theme.BarCodeScannerDemo"
         tools:targetApi="31" >
@@ -29,7 +29,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.BarCodeScannerDemo.NoActionBar" />
     </application>
 
