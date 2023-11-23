@@ -3,10 +3,14 @@ package com.rogergcc.barcodescannerdemo.ui.common
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.*
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
+import androidx.camera.core.Camera
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
@@ -21,6 +25,10 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.rogergcc.barcodescannerdemo.databinding.ActivityCameraBinding
+import com.rogergcc.barcodescannerdemo.ui.helper.rotate
+import com.rogergcc.barcodescannerdemo.ui.helper.toBitmap
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 
 
@@ -59,7 +67,7 @@ class CameraActivity : AppCompatActivity() {
 //        binding.overlayView.setCustomText(R.string.place_the_qr_code_in_the_indicated_rectangle)
 //        binding.overlayView.setCustomIcon(R.drawable.quickie_ic_qrcode)
 //        binding.overlayView.setHorizontalFrameRatio(1.2F) //TODO QR OVERLAY
-        binding.overlayView.setHorizontalFrameRatio(1.9F) //TODO BARCODE OVERLAY
+        binding.overlayView.setHorizontalFrameRatio(2.2F) //TODO BARCODE OVERLAY
 //        binding.overlayView.setTorchState(true)
 
         val hasFlash = this.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
@@ -201,8 +209,16 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun bindAnalyseUseCase() {
+        // Configura el escáner de códigos de barras con opciones personalizadas si es necesario
         val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS).build()
+            .setBarcodeFormats(
+//                Barcode.FORMAT_QR_CODE,
+                Barcode.FORMAT_EAN_13,
+                Barcode.FORMAT_CODE_128)
+            .build()
+
+//        val options = BarcodeScannerOptions.Builder()
+//            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS).build()
 
         val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(options)
 
@@ -224,16 +240,14 @@ class CameraActivity : AppCompatActivity() {
         // Initialize our background executor
         val cameraExecutor = Executors.newSingleThreadExecutor()
 
-        analysisUseCase?.setAnalyzer(
-            cameraExecutor,
-            ImageAnalysis.Analyzer { imageProxy ->
-                processImageProxy(barcodeScanner, imageProxy)
-            }
-        )
+        analysisUseCase?.setAnalyzer(cameraExecutor) { imageProxy ->
+            processImageProxy(barcodeScanner, imageProxy)
+        }
+
 
         try {
             cameraProvider!!.bindToLifecycle(
-                /* lifecycleOwner= */this,
+               this,
                 cameraSelector!!,
                 analysisUseCase
             )
@@ -246,45 +260,119 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    private fun cropNv21(nv21: ByteArray, width: Int, height: Int, roi: Rect): ByteArray {
+        // Calcular las nuevas dimensiones después del recorte
+        val newWidth = roi.width()
+        val newHeight = roi.height()
+
+        // Crear un objeto YuvImage para el recorte
+        val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+        val outputStream = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(roi, 100, outputStream)
+
+        // Obtener los bytes JPEG recortados
+        return outputStream.toByteArray()
+    }
+
+    private fun ImageProxy.toNv21(): ByteArray {
+        val nv21 = ByteArray(width * height * 3 / 2)
+        imageToByteBuffer(this, nv21, width * height * 3 / 2)
+        return nv21
+    }
+
+    private fun imageToByteBuffer(image: ImageProxy, outputBuffer: ByteArray, pixelCount: Int) {
+        // Implementa la lógica para convertir la imagen a formato NV21
+        // Utiliza las funciones de ImageProxy y ByteBuffer
+    }
+
     @SuppressLint("UnsafeOptInUsageError")
     private fun processImageProxy(
         barcodeScanner: BarcodeScanner,
         imageProxy: ImageProxy,
     ) {
+
+
         val mediaImage = imageProxy.image
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+        val inputImage = mediaImage?.let { InputImage.fromMediaImage(it, imageProxy.imageInfo.rotationDegrees) }
 
-        val inputImage =
-            mediaImage?.let { InputImage.fromMediaImage(it, imageProxy.imageInfo.rotationDegrees) }
+        if (mediaImage != null) {
 
-        barcodeScanner.process(inputImage)
+            // Calcular las coordenadas del rectángulo para que esté en el centro
+            val rectWidth = 100 // Ancho del rectángulo (ajústalo según tus necesidades)
+            val rectHeight = 400 // Altura del rectángulo (ajústalo según tus necesidades)
+
+            val height = mediaImage.height
+            val width = mediaImage.width
+            val c1x = (width - rectWidth) / 2
+            val c1y = (height - rectHeight) / 2
+            val c2x = c1x + rectWidth
+            val c2y = c1y + rectHeight
+
+// Crear un rectángulo a partir de las coordenadas
+            val rect = Rect(c1x, c1y, c2x, c2y)
+//            val height = mediaImage.height
+//            val width = mediaImage.width
+//
+//            //Since in the end the image will rotate clockwise 90 degree
+//            //left -> top, top -> right, right -> bottom, bottom -> left
+//
+//            //Top    : (far) -value > 0 > +value (closer)
+//            val c1x = (width * 0.125).toInt() + 150
+//
+//            //Right  : (far) -value > 0 > +value (closer)
+//            val c1y = (height * 0.25).toInt() - 25
+//
+//            //Bottom : (closer) -value > 0 > +value (far)
+//            val c2x = (width * 0.875).toInt() - 150
+//
+//            //Left   : (closer) -value > 0 > +value (far)
+//            val c2y = (height * 0.75).toInt() + 25
+//
+//            val rect = Rect()
+//            rect.left = c1x
+//            rect.top = c1y
+//            rect.right = c2x
+//            rect.bottom = c2y
+//
+//
+            val ori: Bitmap = imageProxy.toBitmap()!!
+            val crop = Bitmap.createBitmap(ori, rect.left, rect.top, rect.width(), rect.height())
+            val rImage = crop.rotate(90F)
+//
+            val image = InputImage.fromBitmap(rImage,rotationDegrees)
+
+            barcodeScanner.process(image)
             .addOnSuccessListener { barcodes ->
+
                 barcodes.forEach { barcode ->
+
 
                     val bounds = barcode.boundingBox
                     val corners = barcode.cornerPoints
-
                     val rawValue = barcode.rawValue
 
-                    binding.tvScannedData.text = barcode.rawValue
 
+                    binding.tvScannedData.text = barcode.rawValue
+                    Toast.makeText(this, "scan=> ${barcode.rawValue}", Toast.LENGTH_SHORT).show()
                     val valueType = barcode.valueType
                     // See API reference for complete list of supported types
                     when (valueType) {
                         Barcode.FORMAT_QR_CODE -> {
                             val qrCode = barcode.rawValue
-                            binding.tvScannedData.text = qrCode
+                            binding.tvScannedData.text = "qr $qrCode"
                         }
                         Barcode.TYPE_WIFI -> {
                             val ssid = barcode.wifi!!.ssid
                             val password = barcode.wifi!!.password
                             val type = barcode.wifi!!.encryptionType
-                            binding.tvScannedData.text = "ssid: " + ssid + "\npassword: " + password + "\ntype: " + type
+                            binding.tvScannedData.text = "ssid: $ssid\npassword: $password\ntype: $type"
                         }
                         Barcode.TYPE_URL -> {
                             val title = barcode.url!!.title
                             val url = barcode.url!!.url
 
-                            binding.tvScannedData.text = "Title: " + title + "\nURL: " + url
+                            binding.tvScannedData.text = "Title: $title\nURL: $url"
                         }
                     }
                 }
@@ -299,6 +387,7 @@ class CameraActivity : AppCompatActivity() {
                 imageProxy.close()
 
             }
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -328,5 +417,10 @@ class CameraActivity : AppCompatActivity() {
         private const val TAG = "CameraActivity"
 
         private const val PERMISSION_CAMERA_REQUEST = 1
+
+        //scan_view_finder width & height is  300dp
+        const val SCAN_FRAME_SIZE = 120
+        var mScreenHeight = 0
+        var mScreenWidth = 0
     }
 }
