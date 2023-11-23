@@ -9,4 +9,8 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <string name="quickie_scan_qr_code">Scan QR code</string>
+    <string name="quickie_please_wait">Please wait…</string>
+    <string name="place_the_qr_code">Place the QR Code in the indicated frame</string>
 </resources>
