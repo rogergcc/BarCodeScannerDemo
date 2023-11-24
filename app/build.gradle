@@ -70,16 +70,11 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata:2.4.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.4.0"
 
-    // Use this dependency to bundle the model with your app
-    implementation 'com.google.mlkit:barcode-scanning:17.0.0'
+// logger
+    implementation "com.jakewharton.timber:timber:4.5.1"
 
-    var camerax_version = "1.0.2"
-    // CameraX library
-    implementation("androidx.camera:camera-camera2:${camerax_version}")
-    // If you want to additionally use the CameraX Lifecycle library
-    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
-    // If you want to additionally use the CameraX View class
-    implementation("androidx.camera:camera-view:1.0.0-alpha30")
+    //ScankitSDK
+    implementation "com.huawei.hms:scan:1.2.5.300"
 
     // permissions
     implementation 'com.afollestad.assent:core:3.0.2'
