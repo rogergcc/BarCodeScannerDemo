@@ -2,25 +2,24 @@ package com.rogergcc.barcodescannerdemo.ui.common
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Camera
+import android.graphics.Rect
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
 import com.huawei.hms.hmsscankit.RemoteView
 import com.huawei.hms.ml.scan.HmsScan
 import com.rogergcc.barcodescannerdemo.R
 import com.rogergcc.barcodescannerdemo.databinding.ActivityCameraBinding
 import com.rogergcc.barcodescannerdemo.ui.helper.TimberAppLogger
+import com.rogergcc.qrunlockclientapp.helper.SoundPoolPlayer
 
 
 class CameraActivity : AppCompatActivity() {
@@ -35,13 +34,15 @@ class CameraActivity : AppCompatActivity() {
     private var showTorchToggle = false
     private var showCloseButton = false
     private var useFrontCamera = false
-
+    private var mSoundPoolPlayer: SoundPoolPlayer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setupEdgeToEdgeUI()
+
+        mSoundPoolPlayer = SoundPoolPlayer(this)
 
         //1.get screen density to caculate viewfinder's rect
         val dm = resources.displayMetrics
@@ -50,28 +51,44 @@ class CameraActivity : AppCompatActivity() {
         mScreenWidth = resources.displayMetrics.widthPixels
         mScreenHeight = resources.displayMetrics.heightPixels
 
-        val scanFrameSize = (SCAN_FRAME_SIZE * density).toInt()
-        TimberAppLogger.d("SCAN_FRAME_SIZE $SCAN_FRAME_SIZE")
-        TimberAppLogger.d("density $density")
+        scanFrameSize = (SCAN_FRAME_SIZE * density).toInt()
 
-        TimberAppLogger.d("mScreenWidth $mScreenWidth")
-        TimberAppLogger.d("mScreenHeight $mScreenHeight")
-        TimberAppLogger.d("scanFrameSize $scanFrameSize")
+        TimberAppLogger.i("SCAN_FRAME_SIZE $SCAN_FRAME_SIZE")
+        TimberAppLogger.i("density $density")
+        TimberAppLogger.i("mScreenWidth $mScreenWidth")
+        TimberAppLogger.i("mScreenHeight $mScreenHeight")
+        TimberAppLogger.i("scanFrameSize $scanFrameSize")
 
         //3.caculate viewfinder's rect,it's in the middle of the layout
         //set scanning area(Optional, rect can be null,If not configure,default is in the center of layout)
+//        val rect = Rect()
+//        rect.left = mScreenWidth / 2 - scanFrameSize / 2
+//        rect.right = mScreenWidth / 2 + scanFrameSize / 2
+//        rect.top = mScreenHeight / 2 - scanFrameSize / 2
+//        rect.bottom = mScreenHeight / 2 + scanFrameSize / 2
+//
+
+        // Proporciones del rectángulo del área de escaneo (ajusta según tus necesidades)
+        val aspectRatioWidth = 3
+        val aspectRatioHeight = 1
+
+        // Código para calcular el rectángulo del área de escaneo
         val rect = Rect()
-        rect.left = mScreenWidth / 2 - scanFrameSize / 2
-        rect.right = mScreenWidth / 2 + scanFrameSize / 2
-        rect.top = mScreenHeight / 2 - scanFrameSize / 2
-        rect.bottom = mScreenHeight / 2 + scanFrameSize / 2
+        rect.left = mScreenWidth / 2 - scanFrameSize * aspectRatioWidth / 2
+        rect.right = mScreenWidth / 2 + scanFrameSize * aspectRatioWidth / 2
+        rect.top = mScreenHeight / 2 - scanFrameSize * aspectRatioHeight / 2
+        rect.bottom = mScreenHeight / 2 + scanFrameSize * aspectRatioHeight / 2
 
-
+        // Establecer el rectángulo en la vista
+        //        binding.overlayView.setScanRect(rect)
 
         //initialize RemoteView instance, and set calling back for scanning result
-        remoteView = RemoteView.Builder().setContext(this).setBoundingBox(rect)
+        remoteView = RemoteView.Builder()
+            .setContext(this)
+            .setBoundingBox(rect)
             .setFormat(HmsScan.ALL_SCAN_TYPE).build()
-        remoteView.onCreate(savedInstanceState)
+
+
         remoteView.setOnResultCallback { result -> //judge the result is effective
 
             //                mSoundPoolPlayer.playShortResource(R.raw.bleep);
@@ -80,9 +97,8 @@ class CameraActivity : AppCompatActivity() {
             ) {
                 TimberAppLogger.e("OriginalValue QRSC ${result[0].originalValue} ")
 
-
                 toast("QRSC ${result[0].originalValue} ")
-
+                mSoundPoolPlayer?.playShortResource(R.raw.bleep)
                 binding.tvScannedData.text = result[0].originalValue
 //                val intent = Intent()
 //                intent.putExtra(SCAN_RESULT, result[0])
@@ -91,16 +107,14 @@ class CameraActivity : AppCompatActivity() {
             }
         }
 
+        remoteView.onCreate(savedInstanceState)
         val params = FrameLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT
         )
-
-        val frameLayout = binding.rim
-        frameLayout.addView(remoteView, params)
-
-        val mBackgroundColor = 0x80000000
-
+        binding.rim.addView(remoteView, params)
+        // Set the back, photo scanning, and flashlight operations.
+        // Set the back, photo scanning, and flashlight operations.
         applyScannerConfig()
 //        setupCamera() 11
     }
@@ -110,7 +124,6 @@ class CameraActivity : AppCompatActivity() {
         binding.overlayView.setCustomIcon(R.drawable.quickie_ic_qrcode)
 //        binding.overlayView.setHorizontalFrameRatio(1.2F)//QR
         binding.overlayView.setHorizontalFrameRatio(2.2F) // BARCODE AL OJO
-//        binding.overlayView.setTorchState(true)
 //        binding.overlayView.setCloseVisibilityAndOnClick(true) { finish() }
 
         val hasFlash = this.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
@@ -235,6 +248,7 @@ class CameraActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_CAMERA_REQUEST) {
             if (isCameraPermissionGranted()) {
                 toast("Camera permission granted")
+
             } else {
                 toast("Camera permission denied")
             }
@@ -260,5 +274,6 @@ class CameraActivity : AppCompatActivity() {
         const val SCAN_FRAME_SIZE = 120
         var mScreenHeight = 0
         var mScreenWidth = 0
+        var scanFrameSize = 0
     }
 }

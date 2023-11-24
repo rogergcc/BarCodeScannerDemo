@@ -65,10 +65,19 @@ class QROverlayView @JvmOverloads constructor(
                 binding.progressView.visibility = if (value) View.VISIBLE else View.GONE
             }
         }
+    private var rect: Rect? = null
 
     init {
         setWillNotDraw(false)
     }
+
+    // Método para establecer el rectángulo del área de escaneo
+    fun setScanRect(rect: Rect) {
+        this.rect = rect
+        // Notificar a la vista que se ha producido un cambio y debe redibujarse
+        postInvalidate()
+    }
+
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
@@ -82,6 +91,7 @@ class QROverlayView @JvmOverloads constructor(
 
     @Suppress("UnsafeCallOnNullableType")
     override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
         strokePaint.color = if (isHighlighted) accentColor else grayColor
         maskCanvas!!.drawColor(backgroundColor)
         maskCanvas!!.drawRoundRect(outerFrame, outerRadius, outerRadius, strokePaint)
@@ -93,7 +103,17 @@ class QROverlayView @JvmOverloads constructor(
             loadingBackgroundPaint
         )
         canvas.drawBitmap(maskBitmap!!, 0f, 0f, alphaPaint)
-        super.onDraw(canvas)
+
+        rect?.let {
+            // Dibujar el rectángulo en el canvas
+            val paint = Paint().apply {
+                color = Color.RED // Puedes cambiar el color según tus preferencias
+                style = Paint.Style.STROKE
+                strokeWidth = 5f // Grosor del borde del rectángulo
+
+            }
+            canvas.drawRect(it, paint)
+        }
     }
 
     fun setCustomText(stringRes: Int) {
