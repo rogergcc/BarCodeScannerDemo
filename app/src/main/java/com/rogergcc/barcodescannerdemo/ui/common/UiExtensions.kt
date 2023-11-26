@@ -49,22 +49,11 @@ https://stackoverflow.com/questions/50617598/how-to-declare-startactivityforresu
 
 
 
-fun Context?.toast(text: CharSequence, duration: Int = Toast.LENGTH_SHORT) =
-    this?.let { Toast.makeText(it, text, duration).show() }
-
-fun Context?.toast(@StringRes textId: Int, duration: Int = Toast.LENGTH_SHORT) =
-    this?.let { Toast.makeText(it, textId, duration).show() }
 
 inline fun <T : Fragment> T.withArgs(argsBuilder: Bundle.() -> Unit): T =
     this.apply {
         arguments = Bundle().apply(argsBuilder)
     }
-
-fun Context.getCompatColor(@ColorRes colorId: Int) =
-    ResourcesCompat.getColor(resources, colorId, null)
-
-fun Context.getCompatDrawable(@DrawableRes drawableId: Int) =
-    AppCompatResources.getDrawable(this, drawableId)!!
 
 
 fun View.slideUp(duration: Long = 250L) {
