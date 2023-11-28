@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -27,8 +26,6 @@ import com.google.mlkit.vision.common.InputImage
 import com.rogergcc.barcodescannerdemo.databinding.ActivityCameraBinding
 import com.rogergcc.barcodescannerdemo.ui.helper.rotate
 import com.rogergcc.barcodescannerdemo.ui.helper.toBitmap
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 
 
@@ -188,7 +185,7 @@ class CameraActivity : AppCompatActivity() {
 //                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
 //                .build()
 
-            camera= cameraProvider!!.bindToLifecycle(
+            camera = cameraProvider!!.bindToLifecycle(
                 this,
                 cameraSelector!!,
                 previewUseCase,
@@ -198,7 +195,6 @@ class CameraActivity : AppCompatActivity() {
             cameraControl = camera.cameraControl
 //            cameraControl.setZoomRatio(0.9f)
             cameraControl.enableTorch(flashFlag)
-
 
 
         } catch (illegalStateException: IllegalStateException) {
@@ -214,7 +210,15 @@ class CameraActivity : AppCompatActivity() {
             .setBarcodeFormats(
 //                Barcode.FORMAT_QR_CODE,
                 Barcode.FORMAT_EAN_13,
-                Barcode.FORMAT_CODE_128)
+                Barcode.FORMAT_CODE_128,
+                Barcode.FORMAT_CODE_39,
+                Barcode.FORMAT_CODE_93,
+                Barcode.FORMAT_CODABAR,
+                Barcode.FORMAT_EAN_8,
+                Barcode.FORMAT_ITF,
+                Barcode.FORMAT_UPC_A,
+                Barcode.FORMAT_UPC_E,
+            )
             .build()
 
 //        val options = BarcodeScannerOptions.Builder()
@@ -232,7 +236,7 @@ class CameraActivity : AppCompatActivity() {
 //        analysisUseCase.camera.cameraControl.setZoomRatio(0.5f)
 
         analysisUseCase = ImageAnalysis.Builder()
-            .setTargetRotation(previewView?.display?.rotation?:0)
+            .setTargetRotation(previewView?.display?.rotation ?: 0)
 //            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
 //            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
@@ -247,7 +251,7 @@ class CameraActivity : AppCompatActivity() {
 
         try {
             cameraProvider!!.bindToLifecycle(
-               this,
+                this,
                 cameraSelector!!,
                 analysisUseCase
             )
@@ -260,31 +264,6 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    private fun cropNv21(nv21: ByteArray, width: Int, height: Int, roi: Rect): ByteArray {
-        // Calcular las nuevas dimensiones después del recorte
-        val newWidth = roi.width()
-        val newHeight = roi.height()
-
-        // Crear un objeto YuvImage para el recorte
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
-        val outputStream = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(roi, 100, outputStream)
-
-        // Obtener los bytes JPEG recortados
-        return outputStream.toByteArray()
-    }
-
-    private fun ImageProxy.toNv21(): ByteArray {
-        val nv21 = ByteArray(width * height * 3 / 2)
-        imageToByteBuffer(this, nv21, width * height * 3 / 2)
-        return nv21
-    }
-
-    private fun imageToByteBuffer(image: ImageProxy, outputBuffer: ByteArray, pixelCount: Int) {
-        // Implementa la lógica para convertir la imagen a formato NV21
-        // Utiliza las funciones de ImageProxy y ByteBuffer
-    }
-
     @SuppressLint("UnsafeOptInUsageError")
     private fun processImageProxy(
         barcodeScanner: BarcodeScanner,
@@ -294,7 +273,8 @@ class CameraActivity : AppCompatActivity() {
 
         val mediaImage = imageProxy.image
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-        val inputImage = mediaImage?.let { InputImage.fromMediaImage(it, imageProxy.imageInfo.rotationDegrees) }
+        val inputImage =
+            mediaImage?.let { InputImage.fromMediaImage(it, imageProxy.imageInfo.rotationDegrees) }
 
         if (mediaImage != null) {
 
@@ -340,53 +320,55 @@ class CameraActivity : AppCompatActivity() {
             val crop = Bitmap.createBitmap(ori, rect.left, rect.top, rect.width(), rect.height())
             val rImage = crop.rotate(90F)
 //
-            val image = InputImage.fromBitmap(rImage,rotationDegrees)
+            val image = InputImage.fromBitmap(rImage, rotationDegrees)
 
             barcodeScanner.process(image)
-            .addOnSuccessListener { barcodes ->
+                .addOnSuccessListener { barcodes ->
 
-                barcodes.forEach { barcode ->
-
-
-                    val bounds = barcode.boundingBox
-                    val corners = barcode.cornerPoints
-                    val rawValue = barcode.rawValue
+                    barcodes.forEach { barcode ->
 
 
-                    binding.tvScannedData.text = barcode.rawValue
-                    Toast.makeText(this, "scan=> ${barcode.rawValue}", Toast.LENGTH_SHORT).show()
-                    val valueType = barcode.valueType
-                    // See API reference for complete list of supported types
-                    when (valueType) {
-                        Barcode.FORMAT_QR_CODE -> {
-                            val qrCode = barcode.rawValue
-                            binding.tvScannedData.text = "qr $qrCode"
-                        }
-                        Barcode.TYPE_WIFI -> {
-                            val ssid = barcode.wifi!!.ssid
-                            val password = barcode.wifi!!.password
-                            val type = barcode.wifi!!.encryptionType
-                            binding.tvScannedData.text = "ssid: $ssid\npassword: $password\ntype: $type"
-                        }
-                        Barcode.TYPE_URL -> {
-                            val title = barcode.url!!.title
-                            val url = barcode.url!!.url
+                        val bounds = barcode.boundingBox
+                        val corners = barcode.cornerPoints
+                        val rawValue = barcode.rawValue
 
-                            binding.tvScannedData.text = "Title: $title\nURL: $url"
+
+                        binding.tvScannedData.text = barcode.rawValue
+                        Toast.makeText(this, "scan=> ${barcode.rawValue}", Toast.LENGTH_SHORT)
+                            .show()
+                        val valueType = barcode.valueType
+                        // See API reference for complete list of supported types
+                        when (valueType) {
+                            Barcode.FORMAT_QR_CODE -> {
+                                val qrCode = barcode.rawValue
+                                binding.tvScannedData.text = "qr $qrCode"
+                            }
+                            Barcode.TYPE_WIFI -> {
+                                val ssid = barcode.wifi!!.ssid
+                                val password = barcode.wifi!!.password
+                                val type = barcode.wifi!!.encryptionType
+                                binding.tvScannedData.text =
+                                    "ssid: $ssid\npassword: $password\ntype: $type"
+                            }
+                            Barcode.TYPE_URL -> {
+                                val title = barcode.url!!.title
+                                val url = barcode.url!!.url
+
+                                binding.tvScannedData.text = "Title: $title\nURL: $url"
+                            }
                         }
                     }
                 }
-            }
-            .addOnFailureListener {
-                Log.e(TAG, it.message ?: it.toString())
-            }
-            .addOnCompleteListener {
-                // When the image is from CameraX analysis use case, must call image.close() on received
-                // images when finished using them. Otherwise, new images may not be received or the camera
-                // may stall.
-                imageProxy.close()
+                .addOnFailureListener {
+                    Log.e(TAG, it.message ?: it.toString())
+                }
+                .addOnCompleteListener {
+                    // When the image is from CameraX analysis use case, must call image.close() on received
+                    // images when finished using them. Otherwise, new images may not be received or the camera
+                    // may stall.
+                    imageProxy.close()
 
-            }
+                }
         }
     }
 

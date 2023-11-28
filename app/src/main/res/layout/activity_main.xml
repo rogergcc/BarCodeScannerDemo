@@ -31,7 +31,7 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
-
+        android:visibility="gone"
         app:srcCompat="@drawable/ic_stat_name" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
