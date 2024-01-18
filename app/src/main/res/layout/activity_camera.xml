@@ -6,11 +6,15 @@
     android:layout_height="match_parent"
     tools:context=".ui.common.CameraActivity">
 
-
-    <androidx.camera.view.PreviewView
-        android:id="@+id/previewView"
+    <com.rogergcc.barcodescannerdemo.ui.camera.CameraSourcePreview
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" >
+
+    </com.rogergcc.barcodescannerdemo.ui.camera.CameraSourcePreview>
+<!--    <androidx.camera.view.PreviewView-->
+<!--        android:id="@+id/previewView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent" />-->
 
     <com.rogergcc.barcodescannerdemo.ui.helper.QROverlayView
         android:id="@+id/overlayView"

@@ -1,4 +1,4 @@
-package com.rogergcc.qrunlockclientapp.helper
+package com.rogergcc.barcodescannerdemo.ui.helper
 
 import android.content.Context
 import android.media.AudioManager
