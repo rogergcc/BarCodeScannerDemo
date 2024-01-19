@@ -12,19 +12,33 @@
         android:id="@+id/textview_first"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="BarcodeScanner MlKit"
-        app:layout_constraintBottom_toTopOf="@id/buttonFirst"
+        android:text="minSdk 19
+        \ncompileSdk 28
+        \n targetSdk 26
+        \n BarcodeScanner MlKit 16.0.2"
+        app:layout_constraintBottom_toTopOf="@id/btnActionScanCode"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/buttonFirst"
+        android:id="@+id/btnActionScanCode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scanear Barcode QR"
+        android:text="@string/action_scan_code"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textview_first" />
+
+    <TextView
+        android:id="@+id/tvResultCodeScan"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/result_scan_code"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/btnActionScanCode"
+        app:layout_constraintStart_toStartOf="@+id/btnActionScanCode"
+        app:layout_constraintTop_toBottomOf="@+id/btnActionScanCode" />
 </androidx.constraintlayout.widget.ConstraintLayout>

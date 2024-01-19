@@ -32,35 +32,9 @@ class MainActivity : AppCompatActivity() {
 //        appBarConfiguration = AppBarConfiguration(navController.graph)
 //        setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.fab.setOnClickListener { view ->
-            toggleDayNight()
-            Snackbar.make(view, "Replace with your own action MainActivity", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-
-        }
     }
 
 
-    private fun toggleDayNight() {
-        when (resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
-            Configuration.UI_MODE_NIGHT_YES -> {
-//                Timber.e("Night Mode")
-                loge("Night Mode")
-            }
-            Configuration.UI_MODE_NIGHT_NO -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                    } else {
-                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                    }
-                    window.decorView.systemUiVisibility = flags
-                }
-//                Timber.e("Day Mode")
-                loge("Day Mode")
-            }
-        }
-    }
 
     private fun loge(messageLog: String?) {
         Log.e("MainActivity", messageLog ?: "Nadaaa..")
@@ -84,9 +58,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!Utils.allPermissionsGranted(this)) {
-            Utils.requestRuntimePermissions(this )
-        }
+//        if (!Utils.allPermissionsGranted(this)) {
+//            Utils.requestRuntimePermissions(this )
+//        }
     }
 //    override fun onSupportNavigateUp(): Boolean {
 //        val navController = findNavController(R.id.nav_host_fragment_content_main)

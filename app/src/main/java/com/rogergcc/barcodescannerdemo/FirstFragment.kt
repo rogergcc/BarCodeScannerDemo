@@ -1,24 +1,28 @@
 package com.rogergcc.barcodescannerdemo
 
-import android.app.Activity
+import android.Manifest
 import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.graphics.Camera
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.google.mlkit.vision.barcode.Barcode
 import com.rogergcc.barcodescannerdemo.databinding.FragmentFirstBinding
 import com.rogergcc.barcodescannerdemo.ui.LiveBarcodeScanningActivity
-import com.rogergcc.barcodescannerdemo.ui.common.CameraActivity
-import com.rogergcc.barcodescannerdemo.ui.helper.Utils
+import com.rogergcc.barcodescannerdemo.ui.helper.SoundPoolPlayer
 
 
 class FirstFragment : Fragment() {
 
     private var _binding: FragmentFirstBinding? = null
-
+    private var mSoundPoolPlayer: SoundPoolPlayer? = null
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -54,38 +58,67 @@ class FirstFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.buttonFirst.setOnClickListener {
-//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+        binding.btnActionScanCode.setOnClickListener {
 
-//            if (!Utils.allPermissionsGranted(requireContext())) {
-//                Utils.requestRuntimePermissions(requireContext())
-//            }
-//            resultLauncher.launch(Intent(requireContext(), CameraActivity::class.java))
-
-            val intent = Intent(requireContext(), LiveBarcodeScanningActivity::class.java)
-//                startActivity(intent,RC_SELECT_LOCATION);
-            //                startActivity(intent,RC_SELECT_LOCATION);
-            startActivityForResult(
-                intent,
-                RESULT_OK
-            )
+            logd("onViewCreated: btnActionScanCode ")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(
+                    arrayOf(Manifest.permission.CAMERA),
+                    DEFINED_CODE
+                )
+            }
 
         }
     }
 
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        //receive result after your activity finished scanning
         super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            val data = resultCode.let { data }
-            if (data != null) {
-                val barcodeContent = data.getStringExtra("data")
-//                    sharedViewModel.setBarcode(barcodeContent)
+            loge("onActivityResult")
+        if (resultCode != RESULT_OK || data == null) {
+            return
+        }
+        if (requestCode == REQUEST_CODE_SCAN) {
+            val barcodeMlKit  = data.getStringExtra(LiveBarcodeScanningActivity.SCAN_RESULT)
+            if (!TextUtils.isEmpty(barcodeMlKit)) {
+                mSoundPoolPlayer?.playShortResource(R.raw.bleep)
+                //sharedViewModel.setBarcode(barcodeContent)
+                binding.tvResultCodeScan.text = barcodeMlKit
             }
         }
+    }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray,
+    ) {
+        if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+        if (requestCode == DEFINED_CODE) {
+            //start your activity for scanning barcode
+            mSoundPoolPlayer = SoundPoolPlayer(requireContext())
+            startActivityForResult(
+                Intent(requireContext(), LiveBarcodeScanningActivity::class.java),
+                REQUEST_CODE_SCAN
+            )
+
+
+        }
+    }
+
+    companion object {
+        private const val DEFINED_CODE = 222
+        private const val REQUEST_CODE_SCAN = 0X01
+    }
+
+    private fun loge(messageLog: String?) {
+        Log.e("FirstFragment", messageLog ?: "Nadaaa..")
+    }
+    private fun logd(messageLog: String?) {
+        Log.d("FirstFragment", messageLog ?: "Nadaaa..")
     }
 
 

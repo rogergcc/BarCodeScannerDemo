@@ -73,6 +73,15 @@ fun Context.hasPermission(vararg permissions: String): Boolean {
     else true
 }
 
+
+
+fun Activity.requestPermission(vararg permissions: String, @IntRange(from = 0) requestCode: Int) =
+    ActivityCompat.requestPermissions(this, permissions, requestCode)
+
+fun Fragment.requestPermission(vararg permissions: String, @IntRange(from = 0) requestCode: Int) =
+    requestPermissions(permissions, requestCode)
+
+
 fun Context.registerReceiver(
     intentFilter: IntentFilter,
     onReceive: (intent: Intent?) -> Unit,
@@ -86,26 +95,6 @@ fun Context.registerReceiver(
     return receiver
 }
 
-fun Context.openLocationInMaps(location: String?) {
-    val gmmIntentUri = Uri.parse("geo:0,0?q=${Uri.encode(location)}")
-    val intent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-    val mapsPackageName = "com.google.android.apps.maps"
-    val mapsIsInstalled = try {
-        packageManager.getApplicationInfo(mapsPackageName, 0).enabled
-    } catch (e: PackageManager.NameNotFoundException) {
-        false
-    }
-    if (mapsIsInstalled) intent.setPackage(mapsPackageName)
-    if (intent.resolveActivity(packageManager) != null) {
-        startActivity(intent)
-    }
-}
-
-fun Activity.requestPermission(vararg permissions: String, @IntRange(from = 0) requestCode: Int) =
-    ActivityCompat.requestPermissions(this, permissions, requestCode)
-
-fun Fragment.requestPermission(vararg permissions: String, @IntRange(from = 0) requestCode: Int) =
-    requestPermissions(permissions, requestCode)
 
 fun Context.isInstalledOnExternalStorage() = try {
     (applicationInfo.flags and ApplicationInfo.FLAG_EXTERNAL_STORAGE) ==

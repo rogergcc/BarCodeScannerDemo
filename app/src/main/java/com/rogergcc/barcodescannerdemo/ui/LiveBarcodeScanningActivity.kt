@@ -3,28 +3,27 @@ package com.rogergcc.barcodescannerdemo.ui
 import android.animation.AnimatorSet
 import android.content.Intent
 import android.hardware.Camera
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.common.internal.Objects
 import com.google.android.material.chip.Chip
-import com.google.android.material.snackbar.Snackbar
-import com.rogergcc.barcodescannerdemo.ui.camera.CameraSource
+import com.google.mlkit.vision.barcode.Barcode
 import com.rogergcc.barcodescannerdemo.R
 import com.rogergcc.barcodescannerdemo.ui.barcode.BarcodeField
 import com.rogergcc.barcodescannerdemo.ui.barcode.BarcodeProcessor
 import com.rogergcc.barcodescannerdemo.ui.barcode.BarcodeResultFragment
+import com.rogergcc.barcodescannerdemo.ui.camera.CameraSource
 import com.rogergcc.barcodescannerdemo.ui.camera.CameraSourcePreview
 import com.rogergcc.barcodescannerdemo.ui.camera.GraphicOverlay
-import com.rogergcc.barcodescannerdemo.ui.camera.WorkflowModel.WorkflowState
 import com.rogergcc.barcodescannerdemo.ui.camera.WorkflowModel
+import com.rogergcc.barcodescannerdemo.ui.camera.WorkflowModel.WorkflowState
 import com.rogergcc.barcodescannerdemo.ui.settings.SettingsActivity
 import java.io.IOException
-import java.util.ArrayList
 
 class LiveBarcodeScanningActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -42,6 +41,8 @@ class LiveBarcodeScanningActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_barcode_scanning)
+
+        try {
 
         preview = findViewById(R.id.camera_preview)
         graphicOverlay = findViewById<GraphicOverlay>(R.id.camera_preview_graphic_overlay).apply {
@@ -62,7 +63,11 @@ class LiveBarcodeScanningActivity : AppCompatActivity(), View.OnClickListener {
         settingsButton = findViewById<View>(R.id.settings_button).apply {
             setOnClickListener(this@LiveBarcodeScanningActivity)
         }
+
         setUpWorkflowModel()
+        }catch (e:Exception){
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onResume() {
@@ -184,15 +189,25 @@ class LiveBarcodeScanningActivity : AppCompatActivity(), View.OnClickListener {
         workflowModel?.detectedBarcode?.observe(this, Observer { barcode ->
             if (barcode != null) {
 
-                barcodeFieldList.add(BarcodeField("Raw Value", barcode.rawValue ?: ""))
-                BarcodeResultFragment.show(supportFragmentManager, barcodeFieldList)
-//                Snackbar.make(graphicOverlay!!, barcode.rawValue?:"" , Snackbar.LENGTH_INDEFINITE).show()
-//                Toast.makeText(this, barcode.rawValue, Toast.LENGTH_SHORT).show()
+                val intent = Intent()
+                intent.putExtra(SCAN_RESULT, barcode.rawValue ?: "")
+                setResult(RESULT_OK, intent)
+                finish()
+
+//                liveREsultsSameView(barcode)
             }
         })
     }
 
+    private fun liveREsultsSameView(barcode: Barcode) {
+        barcodeFieldList.add(BarcodeField("Raw Value", barcode.rawValue ?: ""))
+        BarcodeResultFragment.show(supportFragmentManager, barcodeFieldList)
+        //                Snackbar.make(graphicOverlay!!, barcode.rawValue?:"" , Snackbar.LENGTH_INDEFINITE).show()
+        //                Toast.makeText(this, barcode.rawValue, Toast.LENGTH_SHORT).show()
+    }
+
     companion object {
         private const val TAG = "LiveBarcodeActivity"
+        const val SCAN_RESULT = "scanResult"
     }
 }
